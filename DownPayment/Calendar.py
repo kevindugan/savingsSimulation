@@ -1,5 +1,5 @@
 
-class Calendar():
+class Calendar(object):
 
     def __init__(self, month=None, year=None):
         assert month > 0 and month <= 12
@@ -18,3 +18,8 @@ class Calendar():
 
         return (newMonth, newYear)
 
+    def makeFutureDate(self, nMonths):
+        assert nMonths >= 0
+
+        date = self.getFutureDate(nMonths)
+        return Calendar(month=date[0], year=date[1])

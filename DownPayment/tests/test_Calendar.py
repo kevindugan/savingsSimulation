@@ -23,5 +23,21 @@ def test_AddMonths():
     for index, date in zip( range(len(expectedDates)), expectedDates):
         assert start.getFutureDate(index) == date
 
+    # Check that passing negative months errors
     with pytest.raises(AssertionError):
         start.getFutureDate(-1)
+
+def test_CreateFutureDate():
+
+    start = Calendar.Calendar(month=6, year=2018)
+
+    date1 = start.makeFutureDate(0)
+    assert date1.date() == (6,2018)
+    date2 = start.makeFutureDate(1)
+    assert date2.date() == (7,2018)
+    date3 = start.makeFutureDate(7)
+    assert date3.date() == (1,2019)
+
+    # Check that passing negative months errors
+    with pytest.raises(AssertionError):
+        start.makeFutureDate(-1)
