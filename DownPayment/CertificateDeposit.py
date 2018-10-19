@@ -21,3 +21,12 @@ class CertificateDeposit(object):
         factor = (1.0 + (self.percentageYield/100.0/12.0))**self.term
 
         return self.principle * factor
+
+    def getMonthlyValue(self):
+        value = [self.principle]
+
+        factor = (1.0 + (self.percentageYield/100.0/12.0) )
+        for index in range(self.term):
+            value += [ factor * value[-1] ]
+
+        return value

@@ -24,4 +24,15 @@ def test_valueCalculation():
     cd = CertificateDeposit.CertificateDeposit(start=Calendar.Calendar(10,2018), apy=1.2, term=4, principle=14)
 
     expectedValue = 14.056084056
-    assert math.fabs(cd.getMaturityValue() - expectedValue) < 1.0e-10
+    result = cd.getMaturityValue()
+    assert math.fabs((result - expectedValue)) < 5.0e-11, "Diff = " + str(math.fabs(expectedValue - result ))
+
+
+def test_monthlyValue():
+    cd = CertificateDeposit.CertificateDeposit(start=Calendar.Calendar(10,2018), apy=1.2, term=4, principle=14)
+
+    expectedValue = [14, 14.014, 14.028014, 14.042042014, 14.056084056]
+    result = cd.getMonthlyValue()
+
+    for expected, value in zip(expectedValue, result):
+        assert math.fabs(expected - value ) < 5.0e-11, "Diff = " + str(math.fabs(expected - value ))

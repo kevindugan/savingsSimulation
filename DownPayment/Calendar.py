@@ -23,3 +23,38 @@ class Calendar(object):
 
         date = self.getFutureDate(nMonths)
         return Calendar(month=date[0], year=date[1])
+
+    def isDateBefore(self, date=None):
+        assert type(date) is tuple and len(date) is 2
+        assert date[0] > 0 and date[0] <= 12
+
+        if date[1] < self.year:
+            return True
+        elif date[1] == self.year:
+            if date[0] < self.month:
+                return True
+            elif date[0] == self.month:
+                return False
+            elif date[0] > self.month:
+                return False
+            else:
+                raise RuntimeError("Date Comparison Failed, Month="+str(date[0]))
+        elif date[1] > self.year:
+            return False
+        else:
+            raise RuntimeError("Date Comparison Failed, Year="+str(date[1]))
+
+    def isDateSame(self, date=None):
+        assert type(date) is tuple and len(date) is 2
+        assert date[0] > 0 and date[0] <= 12
+
+        if date[0] == self.month and date[1] == self.year:
+            return True
+        else:
+            return False
+
+    def isDateAfter(self, date=None):
+        if not self.isDateSame(date) and not self.isDateBefore(date):
+            return True
+        else:
+            return False

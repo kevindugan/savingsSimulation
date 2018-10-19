@@ -8,6 +8,7 @@ def test_Construction():
     # Check that assertion on month range gets activated
     with pytest.raises(AssertionError):
         month = Calendar.Calendar(month=0)
+    with pytest.raises(AssertionError):
         month = Calendar.Calendar(month=13)
 
 def test_AddMonths():
@@ -41,3 +42,36 @@ def test_CreateFutureDate():
     # Check that passing negative months errors
     with pytest.raises(AssertionError):
         start.makeFutureDate(-1)
+
+
+def test_Comparison():
+
+    start = Calendar.Calendar(month=6, year=2018)
+
+    assert start.isDateBefore((5,2018))
+    assert start.isDateBefore((6,2017))
+    assert start.isDateBefore((8,2017))
+    assert not start.isDateBefore((6,2018))
+    assert not start.isDateBefore((7,2018))
+    assert not start.isDateBefore((5,2019))
+
+    assert start.isDateSame((6,2018))
+    assert not start.isDateSame((7,2018))
+    assert not start.isDateSame((5,2018))
+    assert not start.isDateSame((6,2017))
+    assert not start.isDateSame((6,2019))
+
+    assert not start.isDateAfter((5,2018))
+    assert not start.isDateAfter((6,2017))
+    assert not start.isDateAfter((8,2017))
+    assert not start.isDateAfter((6,2018))
+    assert start.isDateAfter((7,2018))
+    assert start.isDateAfter((5,2019))
+
+    # Check that passing invalid date format throws error
+    with pytest.raises(AssertionError):
+        start.isDateBefore((1,2,3))
+    with pytest.raises(AssertionError):
+        start.isDateBefore((13,2))
+    with pytest.raises(AssertionError):
+        start.isDateBefore((-1,3))
