@@ -98,7 +98,8 @@ class Calendar(object):
 
         return label
 
-    def convertDateToWords(self, date=None):
+    @staticmethod
+    def convertDateToWords(date=None):
         assert type(date) is tuple and len(date) is 2
         assert date[0] > 0 and date[0] <= 12
 

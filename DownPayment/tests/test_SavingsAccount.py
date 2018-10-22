@@ -34,24 +34,25 @@ def test_BalanceWithContribution():
     acc.setEndDate((3,2019))
     acc.addMonthlyContribution(12.0)
 
-    balance = acc.calculateBalance()
+    available, unavailable, balance = acc.calculateBalance()
 
     expectedBalance = [12.0, 24.0, 36.0, 48.0, 60.0, 72.0, 84.0, 96.0, 108.0, 120.0]
 
     for result, expected in zip(balance, expectedBalance):
         assert result == expected
 
-def test_BalanceWithCD():
+def test_BalanceWithCDonly():
 
     acc = SavingsAccount.SavingsAccount()
 
     acc.setStartDate((6,2018))
     acc.setEndDate((3,2019))
+    acc.setStartingBalance(14)
     
     cd1 = CertificateDeposit.CertificateDeposit(Calendar.Calendar(6,2018), 1.2, 4, 14.0)
     acc.addCertificateDeposit(cd1)
 
-    balance = acc.calculateBalance()
+    available, unavailable, balance = acc.calculateBalance()
 
     expectedBalance = [14, 14.014, 14.028014, 14.042042014, 14.056084056, 14.056084056, 14.056084056, 14.056084056, 14.056084056, 14.056084056]
 
@@ -71,10 +72,35 @@ def test_BalanceWithCDandContribution():
     cd1 = CertificateDeposit.CertificateDeposit(Calendar.Calendar(8,2018), 1.2, 4, 14.0)
     acc.addCertificateDeposit(cd1)
 
-    balance = acc.calculateBalance()
+    available, unavailable, balance = acc.calculateBalance()
 
-    expectedBalance = [10, 20, 44, 54.014, 64.028014, 74.042042014, 84.056084056, 94.056084056, 104.056084056, 114.056084056]
+    expectedBalance = [10, 20, 30, 40.014, 50.028014, 60.042042014, 70.056084056, 80.056084056, 90.056084056, 100.056084056]
 
+    assert len(balance) == len(expectedBalance)
+    for result, expected in zip(balance, expectedBalance):
+        assert math.fabs(expected - result ) < 5.0e-11, "Diff = " + str(math.fabs(expected - result ))
+
+def test_BalanceWithStartingValue():
+
+    acc = SavingsAccount.SavingsAccount()
+
+    acc.setStartDate((6,2018))
+    acc.setEndDate((3,2019))
+    acc.setStartingBalance(421)
+
+    acc.addMonthlyContribution(10.0)
+    available, unavailable, balance = acc.calculateBalance()
+
+    expectedBalance = [431, 441, 451, 461, 471, 481, 491, 501, 511, 521]
+    assert len(balance) == len(expectedBalance)
+    for result, expected in zip(balance, expectedBalance):
+        assert math.fabs(expected - result ) < 5.0e-11, "Diff = " + str(math.fabs(expected - result ))
+
+    cd1 = CertificateDeposit.CertificateDeposit(Calendar.Calendar(8,2018), 1.2, 4, 14.0)
+    acc.addCertificateDeposit(cd1)
+
+    available, unavailable, balance = acc.calculateBalance()
+    expectedBalance = [431, 441, 451, 461.014, 471.028014, 481.042042014, 491.056084056, 501.056084056, 511.056084056, 521.056084056]
     assert len(balance) == len(expectedBalance)
     for result, expected in zip(balance, expectedBalance):
         assert math.fabs(expected - result ) < 5.0e-11, "Diff = " + str(math.fabs(expected - result ))

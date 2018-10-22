@@ -1,15 +1,22 @@
 from DownPayment import Calendar, CertificateDeposit
 import matplotlib.pyplot as plt
 import numpy
+from prettytable import PrettyTable
 
 class SavingsAccount(object):
 
     def __init__(self):
         self.monthlyContribution = []
         self.certificateDeposits = []
+        self.deposits = []
         self.startDate = None
         self.endDate = None
         self.goal = 0.0
+        self.startingBalance = 0.0
+
+    def setStartingBalance(self, balance=None):
+        assert balance >= 0.0
+        self.startingBalance = balance
 
     def setGoal(self, amount=None):
         assert amount >= 0.0
@@ -24,6 +31,13 @@ class SavingsAccount(object):
             assert self.endDate.isDateBefore(newDate.date())
 
         self.startDate = newDate
+
+    def addDeposit(self, date=None, amount=None):
+        assert type(date) == Calendar.Calendar
+        assert date.isDateBefore(self.startDate.date()) and date.isDateAfter(self.endDate.date())
+        assert amount >= 0.0
+
+        self.deposits += [(date, amount)]
 
     def getStartDate(self):
         return self.startDate
@@ -64,28 +78,38 @@ class SavingsAccount(object):
 
     def calculateBalance(self):
         termLength = self.getTermLength()
-        balance = numpy.zeros(termLength+1)
-        # print(["%5.2f" % member for member in balance])
+        available = numpy.zeros(termLength+1) + self.startingBalance
+        unavailable = numpy.zeros(termLength+1)
+
+        # print("Balance")
+        # print("Available: "+str(["%5.2f" % member for member in available]))
 
         monthlyCont = 0.0
         for deposit in self.monthlyContribution:
             monthlyCont += deposit
 
         for index in range(termLength+1):
-            balance[index] += balance[index-1] + monthlyCont
+            available[index] = available[index-1] + monthlyCont
 
-        # print(["%5.2f" % member for member in balance])
+        for deposit in self.deposits:
+            dateOffset = self.startDate.getTerm(deposit[0].date())
+            available[dateOffset:] += deposit[1]
+
+        # print("Available: "+str(["%5.2f" % member for member in available]))
         for cd in self.certificateDeposits:
             startDate = cd.getStartDate()
             startOffset = self.startDate.getTerm(startDate.date())
-            startingBalance = balance[startOffset:(startOffset+cd.term+1)]
-            balance[startOffset:(startOffset+cd.term+1)] = cd.getMonthlyValue() + startingBalance
+            # Move Funds from Available to Unavailable
+            available[startOffset:] -= cd.principle
+            unavailable[startOffset:(startOffset+cd.term+1)] += cd.getMonthlyValue()
+            unavailable[(startOffset+cd.term+1):] += cd.getMaturityValue()
 
-            maturityValue = cd.getMaturityValue()
-            balance[(startOffset+cd.term+1):] += maturityValue
-        # print(["%5.2f" % member for member in balance])
+            # Move Funds back to available after maturity
+            unavailable[(startOffset+cd.term+1):] -= cd.getMaturityValue()
+            available[(startOffset+cd.term+1):] += cd.getMaturityValue()
+        # print("Available: "+str(["%5.2f" % member for member in available]))
 
-        return balance
+        return (available, unavailable, available+unavailable)
 
     def plotSimulation(self):
         plt.figure()
@@ -97,7 +121,7 @@ class SavingsAccount(object):
         plt.ylim([0, self.goal*2])
 
         plt.step(range(termLength+1), self.calculateGoal())
-        plt.step(range(termLength+1), self.calculateBalance())
+        plt.step(range(termLength+1), self.calculateBalance()[-1])
 
         plt.show()
 
@@ -106,14 +130,25 @@ class SavingsAccount(object):
         for month in range(self.getTermLength()):
             monthLabel += [self.startDate.convertDateToWords(self.startDate.getFutureDate(month))]
 
-        balance = self.calculateBalance()
-        formattedBalance = ["%12.2f" % member for member in balance]
+        available, unavailable, balance = self.calculateBalance()
+        formattedAvailable = ["%.2f" % member for member in available]
+        formattedUnavailable = ["%.2f" % member for member in unavailable]
+        formattedBalance = ["%.2f" % member for member in balance]
 
-        maxLength = len(max(monthLabel, key=len))
-        printedLimit = False
-        for month, amount in zip(monthLabel, formattedBalance):
-            pad = ' '* (maxLength - len(month))
-            print(pad+month+": "+amount)
-            if float(amount) >= self.goal and not printedLimit:
-                print('-'*(maxLength+2+12)+" Goal = "+str(self.goal))
-                printedLimit = True
+        table = PrettyTable()
+
+        table.field_names = ["Month", "Available", "Unavailable", "Balance"]
+        table.align = "r"
+
+        printedLimit = [False, False]
+        maxLength = [len(max(monthLabel, key=len)), len(max(formattedAvailable, key=len)), len(max(formattedUnavailable, key=len)), len(max(formattedBalance, key=len))]
+        for month, avail, unavail, bal in zip(monthLabel, formattedAvailable, formattedUnavailable, formattedBalance):
+            table.add_row([month,avail,unavail,bal])
+            if float(bal) >= self.goal and not printedLimit[0]:
+                table.add_row(['-'*maxLength[0], '-'*maxLength[1], '-'*maxLength[2], '-'*maxLength[3]])
+                printedLimit[0] = True
+            if float(avail) >= self.goal and not printedLimit[1]:
+                table.add_row(['='*maxLength[0], '='*maxLength[1], '='*maxLength[2], '='*maxLength[3]])
+                printedLimit[1] = True
+
+        print(table)
