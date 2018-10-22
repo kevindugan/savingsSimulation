@@ -17,6 +17,9 @@ class CertificateDeposit(object):
     def getMatureDate(self):
         return self.matureDate
 
+    def getStartDate(self):
+        return self.startDate
+
     def getMaturityValue(self):
         factor = (1.0 + (self.percentageYield/100.0/12.0))**self.term
 
