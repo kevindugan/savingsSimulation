@@ -131,24 +131,40 @@ class SavingsAccount(object):
             monthLabel += [self.startDate.convertDateToWords(self.startDate.getFutureDate(month))]
 
         available, unavailable, balance = self.calculateBalance()
-        formattedAvailable = ["%.2f" % member for member in available]
-        formattedUnavailable = ["%.2f" % member for member in unavailable]
-        formattedBalance = ["%.2f" % member for member in balance]
+        formattedAvailable = [ SavingsAccount.formatNumber(member) for member in available]
+        formattedUnavailable = [ SavingsAccount.formatNumber(member) for member in unavailable]
+        formattedBalance = [ SavingsAccount.formatNumber(member) for member in balance]
 
         table = PrettyTable()
 
-        table.field_names = ["Month", "Available", "Unavailable", "Balance"]
+        table.field_names = ["Month", "Available Funds", "Unavailable Funds", "Total Balance"]
         table.align = "r"
 
         printedLimit = [False, False]
-        maxLength = [len(max(monthLabel, key=len)), len(max(formattedAvailable, key=len)), len(max(formattedUnavailable, key=len)), len(max(formattedBalance, key=len))]
+        maxLength = [max(monthLabel, key=len), max(formattedAvailable, key=len), max(formattedUnavailable, key=len), max(formattedBalance, key=len)]
+        maxLength = [ len(max(index, index2)) for index, index2 in zip(table.field_names, maxLength)]
         for month, avail, unavail, bal in zip(monthLabel, formattedAvailable, formattedUnavailable, formattedBalance):
             table.add_row([month,avail,unavail,bal])
-            if float(bal) >= self.goal and not printedLimit[0]:
+            if float(SavingsAccount.unformatNumber(bal)) >= self.goal and not printedLimit[0]:
                 table.add_row(['-'*maxLength[0], '-'*maxLength[1], '-'*maxLength[2], '-'*maxLength[3]])
                 printedLimit[0] = True
-            if float(avail) >= self.goal and not printedLimit[1]:
+            if float(SavingsAccount.unformatNumber(avail)) >= self.goal and not printedLimit[1]:
                 table.add_row(['='*maxLength[0], '='*maxLength[1], '='*maxLength[2], '='*maxLength[3]])
                 printedLimit[1] = True
 
         print(table)
+
+    @staticmethod
+    def formatNumber(number):
+        value = number
+        thousands = int(value/1000)
+        leftover = value - thousands * 1000
+        valueFormat = "{0:06.2f}".format(leftover)
+        if thousands > 0:
+            valueFormat = "{0:3d},".format(thousands) + valueFormat
+
+        return valueFormat.strip()
+
+    @staticmethod
+    def unformatNumber(number):
+        return "".join(number.split(','))

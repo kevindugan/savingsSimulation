@@ -104,3 +104,21 @@ def test_BalanceWithStartingValue():
     assert len(balance) == len(expectedBalance)
     for result, expected in zip(balance, expectedBalance):
         assert math.fabs(expected - result ) < 5.0e-11, "Diff = " + str(math.fabs(expected - result ))
+
+def test_addDeposit():
+
+    acc = SavingsAccount.SavingsAccount()
+
+    acc.setStartDate((6,2018))
+    acc.setEndDate((3,2019))
+    acc.setStartingBalance(421)
+
+    acc.addDeposit(Calendar.Calendar(8,2018), 25.4)
+    acc.addDeposit(Calendar.Calendar(1,2019), 56.1)
+
+    expectedBalance = [421, 421, 446.4, 446.4, 446.4, 446.4, 446.4, 502.5, 502.5, 502.5]
+
+    available, unavailable, balance = acc.calculateBalance()
+
+    for expected, result in zip(expectedBalance, balance):
+        assert math.fabs(expected - result ) < 5.0e-11, "Diff = " + str(math.fabs(expected - result ))
